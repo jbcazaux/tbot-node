@@ -1,0 +1,13 @@
+{
+  "name": "tbot-node",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "mongodb": "^1.4.30",
+    "oauth-1.0a": "^0.1.1",
+    "request": "^2.53.0"
+  }
+}
