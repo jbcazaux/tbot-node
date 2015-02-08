@@ -3,6 +3,7 @@ var OAuth = require('oauth-1.0a');
 var zlib = require('zlib');
 var ToMongo = require('./toMongo');
 var ToTweet = require('./toTweet');
+var ToElasticSearch = require('./toElasticSearch');
 
 var oauth = OAuth({
     consumer: {
@@ -29,6 +30,7 @@ var request_data = {
 var options = {db: 'mongodb://localhost:27017/twitter', collection: 'tweets'};
 var toMongo = ToMongo(options);
 var toTweet = ToTweet();
+var toElasticSearch = ToElasticSearch();
 
 
 var headers = oauth.toHeader(oauth.authorize(request_data, token));
@@ -41,4 +43,5 @@ request({
 })
     .pipe(zlib.createGunzip())
     .pipe(toTweet)
-    .pipe(toMongo);
+    //.pipe(toMongo);
+    .pipe(toElasticSearch);
