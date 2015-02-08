@@ -4,8 +4,6 @@ var MongoClient = require('mongodb').MongoClient;
 
 util.inherits(ToMongo, Writable);
 
-module.exports = ToMongo;
-
 function ToMongo(options) {
     if (!(this instanceof ToMongo)) {
         return new ToMongo(options);
