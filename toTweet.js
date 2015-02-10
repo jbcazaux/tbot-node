@@ -5,31 +5,26 @@ util.inherits(ToTweet, Transform);
 
 function ToTweet(options) {
     if (!(this instanceof ToTweet)) {
-        return new ToTweet({objectMode: true});
+        return new ToTweet({objectMode:true});
     }
 
     Transform.call(this, options);
 
-    this.tweet = '';
 }
 
 ToTweet.prototype._transform = function (chunk, encoding, done) {
-    var data = chunk.toString();
-    var index = data.indexOf('\r\n');
-
-    if (index < 0) {
-        this.tweet += data;
-    } else {
-        var tweetEnd = data.slice(0, index);
-        this.tweet += tweetEnd;
-        try {
-            var obj = JSON.parse(this.tweet);
-            this.push(obj);
-        } catch (er) {
-            console.log('cannot parse ', this.tweet);
+    var line = chunk.toString();
+    try {
+        var obj = JSON.parse(line);
+        if (obj.id) {
+            this.push(obj)
         }
-
-        this.tweet = data.slice(index + 1);
+        else {
+            console.log("not a tweet: ", line);
+        }
+    } catch (er) {
+        console.log('cannot parse ', line);
+        return done(er);
     }
     done();
 };
