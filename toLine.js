@@ -16,28 +16,14 @@ function ToLine(options) {
 
 ToLine.prototype._transform = function (chunk, encoding, done) {
     var data = chunk.toString("utf8");
-    this._parse(data);
-    done();
-};
+    var lines = data.split(this.EOL);
 
-ToLine.prototype._parse = function (data) {
-    var index = data.indexOf(this.EOL);
-    if (index < 0) {
-        this.currentLine += data;
-    } else {
-        var lineEnd = data.slice(0, index);
-        this.currentLine += lineEnd;
-        this.push(this.currentLine, "utf8");
-
-        //TODO:refactor this
-        var nextLine = data.slice(index + this.EOL.length);
-        if (nextLine.indexOf(this.EOL) < 0) {
-            this.currentLine = nextLine;
-        } else {
-            this.currentLine = '';
-            this._parse(nextLine);
-        }
+    while (lines.length > 1) {
+        this.push(this.currentLine + lines.shift(), "utf8");
+        this.currentLine = '';
     }
+    this.currentLine = lines[0];
+    done();
 };
 
 module.exports = ToLine;
