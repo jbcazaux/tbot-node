@@ -20,10 +20,9 @@ ToTweet.prototype._transform = function (chunk, encoding, done) {
             this.push(obj)
         }
         else {
-            console.log("not a tweet: ", line);
+            return done("not a tweet: " + line);
         }
     } catch (er) {
-        console.log('cannot parse ', line);
         return done(er);
     }
     done();
