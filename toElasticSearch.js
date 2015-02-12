@@ -20,7 +20,7 @@ function ToElasticSearch(options) {
         logLevel: 'info'
     };
 
-    options = extend(options || {}, defaultOptions);
+    options = extend(defaultOptions, options || {});
     Writable.call(this, {objectMode: true});
 
     this.client = new elasticsearch.Client({

@@ -17,4 +17,12 @@ describe("ToElasticSearch Module:", function () {
 
     });
 
+
+    it("should create elastic search client with custom connection parameters", function () {
+        toElasticSearch = new ToElasticSearch({host:'myhost.com', port: 1234});
+
+        expect(toElasticSearch.client.transport._config.host).to.be.equal('myhost.com:1234');
+    });
+
+
 });
