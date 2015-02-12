@@ -2,6 +2,7 @@ var elasticsearch = require('elasticsearch');
 
 var Writable = require('stream').Writable;
 var util = require('util');
+var extend = util._extend;
 
 
 util.inherits(ToElasticSearch, Writable);
@@ -12,12 +13,19 @@ function ToElasticSearch(options) {
     if (!(this instanceof ToElasticSearch)) {
         return new ToElasticSearch(options);
     }
+
+    var defaultOptions = {
+        host: 'localhost',
+        port: 9200,
+        logLevel: 'info'
+    };
+
+    options = extend(options || {}, defaultOptions);
     Writable.call(this, {objectMode: true});
-    this.options = options;
 
     this.client = new elasticsearch.Client({
-        host: 'localhost:9200',
-        log: 'info'
+        host: options.host + ':' + options.port,//'localhost:9200',
+        log: options.logLevel//'info'
     });
 }
 
