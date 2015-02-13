@@ -13,8 +13,8 @@ function ToElasticSearch(options) {
         return new ToElasticSearch(options);
     }
 
-    if (!options || !options.index || options.index.length === 0){
-       throw new Error('An index name must be set in options!')
+    if (!options || !options.index || options.index.length === 0) {
+        throw new Error('An index name must be set in options!')
     }
 
     var defaultOptions = {
@@ -39,12 +39,12 @@ ToElasticSearch.prototype._write = function (obj, encoding, done) {
         type: obj.type,
         id: obj.id,
         body: obj
-    }).then(function(body){
-        //done();
-    }, function (error){
-        console.log('error indexing !!')
-        //done();
+    }).then(function (body) {
+        //nothing
+    }, function (error) {
+        console.log('error indexing object with id: ', obj.id);
     });
+    //don t wait for the promise to return
     done();
 };
 
