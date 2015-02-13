@@ -32,7 +32,7 @@ var options = {db: 'mongodb://localhost:27017/twitter', collection: 'tweets'};
 //var toMongo = ToMongo(options);
 var toTweet = ToTweet();
 var toLine = ToLine();
-var toElasticSearch = ToElasticSearch();
+var toElasticSearch = ToElasticSearch({index: 'twitter'});
 
 var headers = oauth.toHeader(oauth.authorize(request_data, token));
 headers['Accept-Encoding'] = 'deflate, gzip';

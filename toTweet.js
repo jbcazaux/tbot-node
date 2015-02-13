@@ -15,9 +15,13 @@ function ToTweet(options) {
 ToTweet.prototype._transform = function (chunk, encoding, done) {
     var line = chunk.toString();
     try {
-        var obj = JSON.parse(line);
-        if (obj.id) {
-            this.push(obj)
+        var tweet = JSON.parse(line);
+        if (tweet.id) {
+            var type = 'tweet';
+            if (tweet.in_reply_to_status_id) {type = 'reply'}
+            else if (tweet.retweeted_status && tweet.retweeted_status.id) {type = 'retweet'}
+            tweet.type = type;
+            this.push(tweet)
         }
         else {
             return done("not a tweet: " + line);

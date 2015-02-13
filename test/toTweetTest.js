@@ -13,13 +13,12 @@ describe("ToTweet Module:", function () {
         }
     });
 
-
     it("should create tweet object from minimal string", function () {
         toTweet._transform('{"id": 123456}', '', function () {
         });
 
         expect(tweets).to.have.length(1);
-        expect(tweets[0]).to.deep.equal({"id": 123456});
+        expect(tweets[0].id).to.equal(123456);
     });
 
     it("should not create tweet object from limit warning", function () {
@@ -27,5 +26,29 @@ describe("ToTweet Module:", function () {
         });
 
         expect(tweets).to.be.empty();
+    });
+
+    it("should create add type 'tweet' to tweet object", function () {
+        toTweet._transform('{"id": 123456}', '', function () {
+        });
+
+        expect(tweets).to.have.length(1);
+        expect(tweets[0].type).to.equal('tweet');
+    });
+
+    it("should create add type 'retweet' to tweet object", function () {
+        toTweet._transform('{"id": 123456, "retweeted_status" : {"id": 321}}', '', function () {
+        });
+
+        expect(tweets).to.have.length(1);
+        expect(tweets[0].type).to.equal('retweet');
+    });
+
+    it("should create add type 'reply' to tweet object", function () {
+        toTweet._transform('{"id": 123456, "in_reply_to_status_id" : 321}', '', function () {
+        });
+
+        expect(tweets).to.have.length(1);
+        expect(tweets[0].type).to.equal('reply');
     });
 });

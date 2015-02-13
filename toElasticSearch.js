@@ -7,11 +7,14 @@ var extend = util._extend;
 
 util.inherits(ToElasticSearch, Writable);
 
-module.exports = ToElasticSearch;
 
 function ToElasticSearch(options) {
     if (!(this instanceof ToElasticSearch)) {
         return new ToElasticSearch(options);
+    }
+
+    if (!options || !options.index || options.index.length === 0){
+       throw new Error('An index name must be set in options!')
     }
 
     var defaultOptions = {
@@ -20,25 +23,20 @@ function ToElasticSearch(options) {
         logLevel: 'info'
     };
 
-    options = extend(defaultOptions, options || {});
+    this.options = extend(defaultOptions, options || {});
     Writable.call(this, {objectMode: true});
 
     this.client = new elasticsearch.Client({
-        host: options.host + ':' + options.port,//'localhost:9200',
-        log: options.logLevel//'info'
+        host: this.options.host + ':' + this.options.port,
+        log: this.options.logLevel
     });
 }
 
 
 ToElasticSearch.prototype._write = function (obj, encoding, done) {
-
-    var type = 'tweet';
-    if (obj.in_reply_to_status_id) {type = 'reply'}
-    else if (obj.retweeted_status && obj.retweeted_status.id) {type = 'retweet'}
-
     this.client.index({
-        index: 'twitter',
-        type: type,
+        index: this.options.index,
+        type: obj.type,
         id: obj.id,
         body: obj
     }).then(function(body){
@@ -50,6 +48,6 @@ ToElasticSearch.prototype._write = function (obj, encoding, done) {
     done();
 };
 
-
+module.exports = ToElasticSearch;
 
 

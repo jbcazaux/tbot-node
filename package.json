@@ -13,6 +13,8 @@
   },
   "devDependencies": {
     "chai": "*",
+    "sinon": "^1.12.2",
+    "sinon-chai": "*",
     "mocha": "*"
   }
 }
