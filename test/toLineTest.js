@@ -78,12 +78,13 @@ describe("ToLine Module:", function () {
             };
         });
 
-        it("should parse one full line with custom EOL", function () {
-            toLine._transform('{"truc":"machin", "id": "123"}\n', '', function () {
+        it("should parse 2 lines with custom EOL", function () {
+            toLine._transform('bonjour\nbyebye\n', '', function () {
             });
 
             expect(toLine.currentLine).to.equal('');
-            expect(lines[0]).to.equal('{"truc":"machin", "id": "123"}');
+            expect(lines[0]).to.equal('bonjour');
+            expect(lines[1]).to.equal('byebye');
         });
 
     });
