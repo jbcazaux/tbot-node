@@ -1,22 +1,20 @@
-var expect = require('chai').expect;
+var chai = require('chai');
+var expect = chai.expect;
+var sinon = require("sinon");
+var sinonChai = require("sinon-chai");
+chai.use(sinonChai);
 var ToLine = require('../toLine');
 
 describe("ToLine Module:", function () {
     var toLine;
-    var lines;
-
-    beforeEach(function () {
-        lines = new Array();
-    });
+    var pushStub;
 
 
     describe("parsing lines:", function () {
 
         beforeEach(function () {
             toLine = new ToLine();
-            toLine.push = function (l) {
-                lines.push(l);
-            };
+            pushStub = sinon.spy(toLine, 'push');
         });
 
         it("should parse one full line", function () {
@@ -24,7 +22,8 @@ describe("ToLine Module:", function () {
             });
 
             expect(toLine.currentLine).to.equal('');
-            expect(lines[0]).to.equal('{"truc":"machin", "id": "123"}');
+            expect(pushStub).to.have.been.calledOnce;
+            expect(pushStub).to.have.been.calledWith('{"truc":"machin", "id": "123"}');
         });
 
         it("should parse 1.5 line", function () {
@@ -32,7 +31,8 @@ describe("ToLine Module:", function () {
             });
 
             expect(toLine.currentLine).to.equal('{"another"');
-            expect(lines[0]).to.equal('{"truc":"machin", "id": "123"}');
+            expect(pushStub).to.have.been.calledOnce;
+            expect(pushStub).to.have.been.calledWith('{"truc":"machin", "id": "123"}');
 
         });
 
@@ -43,9 +43,9 @@ describe("ToLine Module:", function () {
             });
 
             expect(toLine.currentLine).to.equal('');
-            expect(lines).to.have.length(2);
-            expect(lines[0]).to.equal('{"truc":"machin", "id": "123"}');
-            expect(lines[1]).to.equal('{"another": "tweet"}');
+            expect(pushStub).to.have.been.calledTwice;
+            expect(pushStub).to.have.been.calledWith('{"truc":"machin", "id": "123"}');
+            expect(pushStub).to.have.been.calledWith('{"another": "tweet"}');
         });
 
         it("should parse 2 lines", function () {
@@ -53,9 +53,9 @@ describe("ToLine Module:", function () {
             });
 
             expect(toLine.currentLine).to.equal('');
-            expect(lines).to.have.length(2);
-            expect(lines[0]).to.equal('{"truc":"machin", "id": "123"}');
-            expect(lines[1]).to.equal('{"another": "tweet"}');
+            expect(pushStub).to.have.been.calledTwice;
+            expect(pushStub).to.have.been.calledWith('{"truc":"machin", "id": "123"}');
+            expect(pushStub).to.have.been.calledWith('{"another": "tweet"}');
         });
 
         it("should parse 2.5 lines", function () {
@@ -63,9 +63,9 @@ describe("ToLine Module:", function () {
             });
 
             expect(toLine.currentLine).to.equal('{"third":');
-            expect(lines).to.have.length(2);
-            expect(lines[0]).to.equal('{"truc":"machin", "id": "123"}');
-            expect(lines[1]).to.equal('{"another": "tweet"}');
+            expect(pushStub).to.have.been.calledTwice;
+            expect(pushStub).to.have.been.calledWith('{"truc":"machin", "id": "123"}');
+            expect(pushStub).to.have.been.calledWith('{"another": "tweet"}');
         });
     });
 
@@ -73,9 +73,7 @@ describe("ToLine Module:", function () {
 
         beforeEach(function () {
             toLine = new ToLine({EOL: '\n'});
-            toLine.push = function (l) {
-                lines.push(l);
-            };
+            pushStub = sinon.stub(toLine, 'push');
         });
 
         it("should parse 2 lines with custom EOL", function () {
@@ -83,8 +81,9 @@ describe("ToLine Module:", function () {
             });
 
             expect(toLine.currentLine).to.equal('');
-            expect(lines[0]).to.equal('bonjour');
-            expect(lines[1]).to.equal('byebye');
+            expect(pushStub).to.have.been.calledTwice;
+            expect(pushStub).to.have.been.calledWith('bonjour');
+            expect(pushStub).to.have.been.calledWith('byebye');
         });
 
     });
