@@ -28,7 +28,7 @@ describe("ToTweet Module:", function () {
         expect(tweets).to.be.empty();
     });
 
-    it("should create add type 'tweet' to tweet object", function () {
+    it("should add type 'tweet' to tweet object", function () {
         toTweet._transform('{"id": 123456}', '', function () {
         });
 
@@ -36,7 +36,7 @@ describe("ToTweet Module:", function () {
         expect(tweets[0].type).to.equal('tweet');
     });
 
-    it("should create add type 'retweet' to tweet object", function () {
+    it("should add type 'retweet' to tweet object", function () {
         toTweet._transform('{"id": 123456, "retweeted_status" : {"id": 321}}', '', function () {
         });
 
@@ -44,7 +44,7 @@ describe("ToTweet Module:", function () {
         expect(tweets[0].type).to.equal('retweet');
     });
 
-    it("should create add type 'reply' to tweet object", function () {
+    it("should add type 'reply' to tweet object", function () {
         toTweet._transform('{"id": 123456, "in_reply_to_status_id" : 321}', '', function () {
         });
 
