@@ -1,35 +1,34 @@
 var request = require('./requester');
 var ToMongo = require('./toMongo');
+var ToCursoredList = require('./toCursoredList');
 
 var options = {db: 'mongodb://localhost:27017/twitter', collection: 'profiles'};
 var toMongo = ToMongo(options);
 
-function getFollowers(twitterId, cursor, cb) {
+function getFollowers(twitterId, cursor) {
 
-    var req = request('GET', 'https://api.twitter.com/1.1/followers/ids.json?cursor=' + cursor + '&user_id=' + twitterId + '&count=5000');
-
-    var chunks = '';
-    req.on('data', function (chunk) {
-        chunks += chunk.toString('utf8');
-    });
-    req.on('end', function (chunk) {
-        cb(chunks);
-    });
+    return request('GET', 'https://api.twitter.com/1.1/followers/ids.json?cursor=' + cursor + '&user_id=' + twitterId + '&count=1');
 }
 
-function getAllFollowers(id, cb) {
-    var ids = [];
-    getFollowers(id, -1, function lambda(data) {
-        var obj = JSON.parse(data);
-        ids = ids.concat(obj.ids);
-        if (obj.next_cursor > 0) {
-            getFollowers(id, obj.next_cursor, lambda);
-        } else {
+function generateStream(id, cursor, cb) {
+    var data;
+    var s = getFollowers(id, cursor).pipe(ToCursoredList());//.pipe(toMongo);
+
+    s.on('data', function(chunk) {
+        data = chunk;
+    });
+    s.on('end', function() {
+        //Mongo.insert()...
+        if (data.next_cursor > 0) {
+            generateStream(id, data.next_cursor, cb);
+        }else {
             cb(ids);
         }
     });
 }
 
-getAllFollowers(95687779, function (data) {
-    console.log(data.length);
+generateStream(2841080950, -1, function(ids){
+    console.log('final: ', ids);
 });
+
+module.exports = generateStream;
