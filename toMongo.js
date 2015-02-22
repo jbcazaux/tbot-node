@@ -28,9 +28,8 @@ ToMongo.prototype._write = function (obj, encoding, done) {
 };
 
 ToMongo.prototype.addFollowed = function(userId, followedId){
-    console.log('create promise');
     var deferred = Q.defer();
-    this.collection.findAndModify({_id: userId}, null, {$push : {follows: followedId}}, {upsert: true}, deferred.makeNodeResolver());
+    this.collection.findAndModify({_id: userId}, null, {$addToSet : {follows: followedId}}, {upsert: true}, deferred.makeNodeResolver());
     return deferred.promise;
 };
 
