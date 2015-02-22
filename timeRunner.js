@@ -21,10 +21,12 @@ TimeRunner.prototype._run = function (j) {
     if (this.queue.length === 0 || this.waiting) return;
     var self = this;
     if (this.count === this.maxRun) {
+        console.log('Pause for ', this.delay / 1000, 'seconds');
         this.waiting = true;
         setTimeout(function () {
+            console.log('resume work');
             self.waiting = false;
-            self._run(true);
+            self._run();
         }, this.delay);
         this.count = 0;
 
