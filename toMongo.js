@@ -1,6 +1,7 @@
 var Writable = require('stream').Writable;
 var util = require('util');
 var MongoClient = require('mongodb').MongoClient;
+var Q = require('q');
 
 util.inherits(ToMongo, Writable);
 
@@ -22,9 +23,15 @@ function ToMongo(options) {
     });
 }
 
-
 ToMongo.prototype._write = function (obj, encoding, done) {
     this.collection.insert(obj, done);
+};
+
+ToMongo.prototype.addFollowed = function(userId, followedId){
+    console.log('create promise');
+    var deferred = Q.defer();
+    this.collection.findAndModify({_id: userId}, null, {$push : {follows: followedId}}, {upsert: true}, deferred.makeNodeResolver());
+    return deferred.promise;
 };
 
 module.exports = ToMongo;
