@@ -1,6 +1,6 @@
 var request = require('./requester');
 var ToMongo = require('./toMongo');
-var ToCursoredList = require('./toCursoredList');
+var ToObject = require('./toObject');
 var Q = require('q');
 var TimeRunner = require('./timeRunner');
 
@@ -18,8 +18,7 @@ function getFollowers(followedId, cursor, cb) {
     return function () {
         var ids = [];
         var data;
-        var s = getFollowersRequest(followedId, cursor).pipe(ToCursoredList());
-        var hd = new memwatch.HeapDiff();
+        var s = getFollowersRequest(followedId, cursor).pipe(ToObject());
         s.on('data', function (chunk) {
             data = chunk;
             ids = ids.concat(data.ids);
@@ -42,7 +41,7 @@ function getFollowers(followedId, cursor, cb) {
     }
 }
 
-var followersOf = 18814998;
+var followersOf = 490126636;
 timeRunner.run(getFollowers(followersOf, -1, function () {
     console.log('done getting followings of', followersOf);
 }));
