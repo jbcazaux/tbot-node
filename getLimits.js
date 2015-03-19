@@ -1,18 +1,19 @@
 var request = require('./requester');
 
-function getLimits() {
-    var s = request('GET', 'https://api.twitter.com/1.1/application/rate_limit_status.json?resources=followers');
-    var data;
-    s.on('data', function (chunk) {
-        data = chunk;
-    });
-    s.on('end', function () {
-        var limit = JSON.parse(data);
-        var remains = limit['resources']['followers']['/followers/ids']['remaining'];
-        var reset = Math.round(limit['resources']['followers']['/followers/ids']['reset'] - new Date().getTime() / 1000);
-        console.log('remaining:', remains, 'reset in', reset);
-    });
-}
+var s = request('GET', 'https://api.twitter.com/1.1/application/rate_limit_status.json?resources=followers,users');
 
-
-getLimits();
+var data = '';
+s.on('data', function (chunk) {
+    data += chunk.toString();
+});
+s.on('end', function () {
+    var result = JSON.parse(data);
+    for (r in result.resources){
+        for (i in result.resources[r]) {
+            var resource = result.resources[r][i];
+            var remaining = resource['remaining'];
+            var limit = resource['limit'];
+            console.log(i, '->', limit - remaining, '/', limit, 'reset:', Math.round(resource['reset'] - new Date().getTime() / 1000));
+        }
+    }
+});

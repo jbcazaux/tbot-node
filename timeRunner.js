@@ -17,11 +17,11 @@ TimeRunner.prototype.run = function (runnable) {
     this._run();
 }
 
-TimeRunner.prototype._run = function (j) {
+TimeRunner.prototype._run = function () {
     if (this.queue.length === 0 || this.waiting) return;
     var self = this;
     if (this.count === this.maxRun) {
-        console.log('Pause for ', this.delay / 1000, 'seconds');
+        console.log('Pause for ', this.delay / 1000, 'seconds @', new Date());
         this.waiting = true;
         setTimeout(function () {
             console.log('resume work');
@@ -29,7 +29,6 @@ TimeRunner.prototype._run = function (j) {
             self._run();
         }, this.delay);
         this.count = 0;
-
     } else {
         this.count++;
         var runnable = this.queue.shift();

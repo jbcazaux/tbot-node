@@ -4,6 +4,10 @@ var options = {db: 'mongodb://localhost:27017/twitter', collection: 'profiles'};
 var optionsTo = {db: 'mongodb://localhost:27017/twitter', collection: 'profiles2'};
 
 var toMongo = ToMongo(optionsTo);
+
+var TimeRunner = require('./timeRunner');
+var timeRunner = TimeRunner(5,.5 * 60 * 1000);
+
 var Transform = require('stream').Transform;
 var util = require('util');
 
@@ -17,27 +21,37 @@ function ToRequest(options) {
     options = options || {objectMode: true};
     Transform.call(this, options);
     this.buf = [];
+    this.cnt = 0;
 }
+
+ToRequest.prototype.ff = function(done) {
+
+    var self = this;
+    self._fetch(self.buf, function (data) {
+        JSON.parse(data).forEach(self.push.bind(self));
+        self.buf.length = 0;
+
+        done();
+    });
+};
 
 ToRequest.prototype._transform = function (chunk, encoding, done) {
 
     this.buf.push(chunk._id);
     var self = this;
 
-    if (this.buf.length < 10) {
+    if (this.buf.length < 3) {
         done();
     }
     else {
-        this._fetch(this.buf, function (data) {
-            console.log('transform - fetch ok')
-            var arr = JSON.parse(data);
-            console.log('Push ', arr.length);
-            for (var i in arr) {
-                self.push(arr[i]);
-            }
-            self.buf.length = 0;
+        timeRunner.run(function () {
+            self._fetch(self.buf, function (data) {
+                console.log('transform - fetch ok')
+                JSON.parse(data).forEach(self.push.bind(self));
+                self.buf.length = 0;
 
-            done();
+                done();
+            });
         });
     }
 };
@@ -45,15 +59,15 @@ ToRequest.prototype._transform = function (chunk, encoding, done) {
 ToRequest.prototype._flush = function (done) {
     console.log('flush', this.buf.length);
     var self = this;
-    this._fetch(this.buf, function (data) {
-        console.log('flush - fetch ok');
-        var arr = JSON.parse(data);
-        console.log('Push ', arr.length);
-        for (var i in arr) {
-            self.push(arr[i]);
-        }
-        self.buf.length = 0;
-        done();
+
+    timeRunner.run(function () {
+        self._fetch(self.buf, function (data) {
+            console.log('transform - fetch ok')
+            JSON.parse(data).forEach(self.push.bind(self));
+            self.buf.length = 0;
+
+            done();
+        });
     });
 };
 
