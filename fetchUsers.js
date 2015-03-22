@@ -1,94 +1,30 @@
+var MongoClient = require('mongodb').MongoClient;
 var request = require('./requester');
-var ToMongo = require('./toMongo');
-var options = {db: 'mongodb://localhost:27017/twitter', collection: 'profiles'};
-var optionsTo = {db: 'mongodb://localhost:27017/twitter', collection: 'profiles2'};
+var optionsMongoFrom = {db: 'mongodb://localhost:27017/twitter', collection: 'profiles'};
+var optionsMongoTo = {db: 'mongodb://localhost:27017/twitter', collection: 'profiles2'};
 
-var toMongo = ToMongo(optionsTo);
-
-var TimeRunner = require('./timeRunner');
-var timeRunner = TimeRunner(5,.5 * 60 * 1000);
+var toMongo = require('./toMongo')(optionsMongoTo);
+var timeRunner = require('./timeRunner')(5, .1 * 60 * 1000);
 
 var Transform = require('stream').Transform;
 var util = require('util');
 
-util.inherits(ToRequest, Transform);
+util.inherits(FetchUsers, Transform);
 
-function ToRequest(options) {
-    if (!(this instanceof ToRequest)) {
-        return new ToRequest(options);
+function FetchUsers(options) {
+    if (!(this instanceof FetchUsers)) {
+        return new FetchUsers(options);
     }
 
     options = options || {objectMode: true};
     Transform.call(this, options);
-    this.buf = [];
-    this.cnt = 0;
+    this.idsToFetch = [];
 }
 
-ToRequest.prototype.ff = function(done) {
 
-    var self = this;
-    self._fetch(self.buf, function (data) {
-        JSON.parse(data).forEach(self.push.bind(self));
-        self.buf.length = 0;
-
-        done();
-    });
-};
-
-ToRequest.prototype._transform = function (chunk, encoding, done) {
-
-    this.buf.push(chunk._id);
-    var self = this;
-
-    if (this.buf.length < 3) {
-        done();
-    }
-    else {
-        timeRunner.run(function () {
-            self._fetch(self.buf, function (data) {
-                console.log('transform - fetch ok')
-                JSON.parse(data).forEach(self.push.bind(self));
-                self.buf.length = 0;
-
-                done();
-            });
-        });
-    }
-};
-
-ToRequest.prototype._flush = function (done) {
-    console.log('flush', this.buf.length);
-    var self = this;
-
-    timeRunner.run(function () {
-        self._fetch(self.buf, function (data) {
-            console.log('transform - fetch ok')
-            JSON.parse(data).forEach(self.push.bind(self));
-            self.buf.length = 0;
-
-            done();
-        });
-    });
-};
-
-module.exports = ToRequest;
-
-
-var tr = ToRequest();
-var MongoClient = require('mongodb').MongoClient;
-
-MongoClient.connect(options.db, function (err, db) {
-
-    var collection = db.collection(options.collection);
-    var stream = collection.find().limit(31).stream();
-    stream.pipe(tr).pipe(toMongo);
-
-});
-
-
-ToRequest.prototype._fetch = function (ids, cb) {
-    console.log("will fetch ", ids.length, "profiles");
-    var req = request('GET', 'https://api.twitter.com/1.1/users/lookup.json?user_id=' + ids.join(','));
+FetchUsers.prototype._fetch = function (cb) {
+    console.log("will fetch ", this.idsToFetch.length, "profiles");
+    var req = request('GET', 'https://api.twitter.com/1.1/users/lookup.json?user_id=' + this.idsToFetch.join(','));
 
     var chunks = '';
     req.on('data', function (chunk) {
@@ -98,3 +34,33 @@ ToRequest.prototype._fetch = function (ids, cb) {
         cb(chunks);
     });
 };
+
+FetchUsers.prototype._pushFetchedUsers = function (done, users){
+    JSON.parse(users).forEach(this.push.bind(this));
+    this.idsToFetch.length = 0;
+    done();
+};
+
+FetchUsers.prototype._createFetchRequest = function(done){
+    this._fetch(this._pushFetchedUsers.bind(this, done));
+};
+
+FetchUsers.prototype._dispatchFetchRequestOverTime = function(done){
+    timeRunner.run(this._createFetchRequest.bind(this, done));
+};
+
+FetchUsers.prototype._transform = function (chunk, encoding, done) {
+    this.idsToFetch.push(chunk._id);
+    this.idsToFetch.length < 3 ? done() :  this._dispatchFetchRequestOverTime(done);
+};
+
+var tr = FetchUsers();
+FetchUsers.prototype._flush = FetchUsers.prototype._dispatchFetchRequestOverTime.bind(tr);
+
+module.exports = FetchUsers;
+
+MongoClient.connect(optionsMongoFrom.db, function (err, db) {
+    var collection = db.collection(optionsMongoFrom.collection);
+    var stream = collection.find().limit(31).stream();
+    stream.pipe(tr).pipe(toMongo);
+});
